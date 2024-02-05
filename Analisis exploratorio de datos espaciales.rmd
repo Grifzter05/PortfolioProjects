@@ -1,0 +1,426 @@
+---
+title: "EDA y ESDA_CruzSánchez"
+author: "Cristian Emanuel Cruz Sánchez"
+date: "2023-10-15"
+output: html_document
+---
+
+#  <span style="color:blue">Análisis exploratorio de datos
+
+Primero instalamos las bibliotecas correspondientes para el analisis exploratorio de datos
+```{r eval=FALSE, include=TRUE}
+install.packages(c("tidyverse", "ggthemes"))
+```
+
+Ya instaladas procedemos a llamar a dichas bibliotecas
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggthemes)
+```
+**Tidyverse** es una biblioteca especialmente útil para el **análisis de datos**, la **limpieza de datos** y la **creación de gráficos**.
+**ggthemes** es un paquete en R que proporciona una colección de temas y estilos adicionales para mejorar la apariencia de los gráficos creados con **ggplot2**.
+
+Los datos que utilizaremos seran una serie de base de datos sacadas de INEGI-CONACYT.Encuesta sobre Investigación y Desarrollo Tecnológico (ESIDET), 2017.
+
+Las bases seran las siguientes:  
+1. Promedio de tiempo en el que espera recuperar la inversión de la innovación más importante introducida al mercado a partir de la comercialización de productos (bienes o servicios) o la puesta en marcha de procesos, por entidad federativa (2014-2015 y 2016)  
+2. Porcentaje estimado de reducción en tiempo y costo de la innovación más importante introducida al mercado, por entidad federativa (2014-2015 y 2016)  
+3. Distribución porcentual de los ingresos totales por ventas de las empresas del sector productivo, por entidad federativa, según clasificación de los productos (bienes o servicios) (2014-2015)  
+4. Distribución porcentual de los ingresos totales por ventas de las empresas del sector productivo, por entidad federativa, según clasificación de los productos (bienes o servicios)(2016)  
+
+Despues de **Georeferenciar** dichas bases en excel y ordenarlas,empezaremos a trabajar con las bases.
+
+##  <span style="color:green"> Promedio de tiempo en el que espera recuperar la inversión de la innovación más importante introducida al mercado a partir de la comercialización de productos (bienes o servicios) o la puesta en marcha de procesos, por entidad federativa (2014-2015 y 2016)
+
+Cargaremos la base de datos que se menciona en el titulo
+
+```{r echo=TRUE}
+# Cargamos readxl para leer el archivo csv o xlsx donde se encuentra nuestro marco de datos
+library(readxl)
+consulta_20 <- read_excel("C:/Users/theli/OneDrive/Escritorio/metodologia/BASES DE DATOS/Base de datos_20-23.xlsx", sheet = "prod_tiemp_emp_recu_inv_15-16")
+```
+
+Creamos un  objeto a partir de nuestra base de datos
+```{r}
+con20 <- consulta_20
+con20
+```
+
+Comenzaremos haciendo un histograma de nuestros datos
+
+```{r}
+# Cargamos ggplot2
+library(ggplot2)
+
+ggplot(data = con20, aes(x = recu_inv_15)) +
+  geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+  labs(title = "Histograma", x = "Promedio de recuperar la inversión en innovación en los años 2014-2015", y = "Frecuencia")
+```
+
+Podemos observar que la distribución de nuestros datos parece ser normal, aunque se muestra un valor atipico con un valor de **60.3**, lo que de cierta forma cesga nuestros datos, para ver más a detalle la dispersion de nuestros datos haremos un `grafico de barras`
+
+```{r}
+ggplot(data = con20, aes(x = recu_inv_15, y = cve_ent, fill = nom_ent)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Recuperación de inversion por estado del 2015", x = "Promedio de inversión", y = "Entidad") +
+  theme(axis.text.y = element_text(size = 8))  
+```
+
+En el grafico anterior se ve a simple vista que el estado que posee el dato atipico es Colima 
+De la misma manera analizaremos los datos del **promedio de retorno de inversion en innovación introducida al mercado**, pero ahora del año **2016**
+
+```{r echo=FALSE}
+library(ggplot2)
+
+ggplot(data = con20, aes(x = recu_inv_16)) +
+  geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+  labs(title = "Histograma", x = "Promedio de recuperar la inversión en innovación en el año 2016", y = "Frecuencia")
+```
+
+Si bien se observa una menor variabilidad en los datos, sigue teniendo un dato atipico a compración de los demas.De igual forma que con el año **2015** vemos mediante un `grafico de barras`que el estado de Colima posee este dato atipico
+```{r}
+ggplot(data = con20, aes(x = recu_inv_16, y = cve_ent, fill = nom_ent)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Recuperación de inversion por estado del 2016", x = "Promedio de inversión", y = "Entidad") +
+  theme(axis.text.y = element_text(size = 8))  
+```
+
+##  <span style="color:green">Porcentaje estimado de reducción en tiempo y costo de la innovación más importante introducida al mercado, por entidad federativa (2014-2015 y 2016)  
+
+Empezamos cargando nuestros datos
+```{r}
+consulta_21 <- read_excel("C:/Users/theli/OneDrive/Escritorio/metodologia/BASES DE DATOS/Base de datos_20-23.xlsx", 
+    sheet = "Por_est_reduc_tiemp_cost_15-16")
+```
+
+Y creamos un objeto a partir de la **consulta_21** 
+```{r}
+con21 <- consulta_21
+con21
+```
+
+Podemos observar que tanto para el año **2014-2015** y **2016** hay dos columnas: **tiempo** y **costo**, asi que buscaremos la relación entre dos variables numéricas mediante un `diagrama de dispersión` para cada año.
+```{r}
+ggplot(
+  data = con21,
+  mapping = aes(x = redutiem_15, y = reducost_15)
+) +
+  geom_point(aes(color = nom_ent)) +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Porcentaje estimado de reducción en tiempo y costo de la innovación",
+    subtitle = "Relación entre costo y tiempo de innovaciones en el mercado",
+    x = "Reducción de tiempo 2015", y = "Reducción de costo 2015"
+  ) 
+```
+
+Vemos que hay una relación positiva entre estas dos variables en el año 2015
+Tambien analizaremos la distribución de cada variable con los siguientes graficos de `curva de densidad`.
+
+```{r}
+ggplot(data = con21, aes(x = reducost_15)) +
+  geom_density(fill = "blue", color = "black") +
+  labs(title = "Curva de Densidad de reducción de costo 2015", x = "reducción de costo", y = "Densidad")
+```
+
+```{r}
+ggplot(data = con21, aes(x = redutiem_15)) +
+  geom_density(fill = "blue", color = "black") +
+  labs(title = "Curva de Densidad de reducción de tiempo 2015", x = "reducción de tiempo", y = "Densidad")
+```
+
+Podemos afirmar que ambas siguen una **distribución normal**, ademas de que en la reducción de costo la curva posee una asimetria positiva.
+
+De la misma forma que hicimos con el año **2015**, haremos un `grafico de dispersión` para las variables **reducción de costo** y **reducción de tiempo** para el año **2016**
+```{r}
+ggplot(
+  data = con21,
+  mapping = aes(x = redutiem_16, y = reducost_16)
+) +
+  geom_point(aes(color = nom_ent)) +
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Porcentaje estimado de reducción en tiempo y costo de la innovación",
+    subtitle = "Relación entre costo y tiempo de innovaciones en el mercado",
+    x = "Reducción de tiempo 2016", y = "Reducción de costo 2016"
+  ) 
+```
+Aqui tambien se ve una **relación positiva** entre estas dos variables, aunque la dispersión es mayor que en el año **2015**.
+A continuación veremos su **distribución**.
+```{r}
+ggplot(data = con21, aes(x = reducost_16)) +
+  geom_density(fill = "blue", color = "black") +
+  labs(title = "Curva de Densidad de reducción de costo 2016", x = "reducción de costo", y = "Densidad")
+```
+
+```{r}
+ggplot(data = con21, aes(x = redutiem_16)) +
+  geom_density(fill = "blue", color = "black") +
+  labs(title = "Curva de Densidad de reducción de tiempo 2016", x = "reducción de tiempo", y = "Densidad")
+```
+
+En ambas curvas se nota una **distribución normal**, aunque en ambas se puede ver con mayor claridad que hay una pequeña cantidad de datos un poco atipicos y ademas la asimetría en reducción de tiempo en el año **2016** es **negativa**.
+
+##  <span style="color:green"> Distribución porcentual de los ingresos totales por ventas de las empresas del sector productivo, por entidad federativa, según clasificación de los productos (bienes o servicios) (2014-2015)  
+
+En esta consulta veremos la distribución porcentual de los ingresos totales por ventas del sector productivo, ya sea por productos **nuevos**, **mejorados** o **sin mejoras**.
+
+Cargamos nuestros datos
+```{r}
+consulta_22 <- read_excel("C:/Users/theli/OneDrive/Escritorio/metodologia/BASES DE DATOS/Base de datos_20-23.xlsx", 
+    sheet = "Dist_porc_ing_tot_15")
+```
+
+Y hacemos un objeto con dicha base de datos
+```{r}
+con22 <- consulta_22
+con22
+```
+Haremos un `grafico de densidad` para ver la forma de distribución de los datos
+```{r}
+ggplot(data = con22, aes(x = Prodnuev_15)) +
+  geom_density(fill = "purple", color = "green") +
+  labs(title = "Curva de Densidad de productos nuevos 2015", x = "productos nuevos", y = "Densidad")
+```
+```{r}
+ggplot(data = con22, aes(x = Prodmej_15)) +
+  geom_density(fill = "purple", color = "green") +
+  labs(title = "Curva de Densidad de productos mejorados 2015", x = "productos mejorados", y = "Densidad")
+```
+```{r}
+ggplot(data = con22, aes(x = Prodsincam_15)) +
+  geom_density(fill = "purple", color = "green") +
+  labs(title = "Curva de Densidad de productos sin cambios 2015", x = "productos sin cambios", y = "Densidad")
+```
+Se observa que los **productos nuevos** y **mejorados** siguen una **distribución normal**, aunque con una **asimetria negativa** en ambas variables, mienttras que la densidad de los productos sin cambios se concentra demasiado, lo que indica una mayor variabilidad y concentracion de los datos.
+
+##  <span style="color:green"> Distribución porcentual de los ingresos totales por ventas de las empresas del sector productivo, por entidad federativa, según clasificación de los productos (bienes o servicios)(2016)
+
+De la misma manera que los datos anteriores, haremos el analisis mediante diagramas de densidad, pues lo unico que cambia es el año de la consulta, en este caso siendo en el **2016**
+
+Cargamos nuestros datos y le asignamos un objeto
+```{r}
+consulta_23 <- read_excel("C:/Users/theli/OneDrive/Escritorio/metodologia/BASES DE DATOS/Base de datos_20-23.xlsx", 
+    sheet = "Dist_porc_ing_tot_16")
+con23 <- consulta_23
+```
+
+A continuación se presentan los graficos de densidad
+
+```{r}
+ggplot(data = con23, aes(x = Prodnuev_16)) +
+  geom_density(fill = "orange", color = "black") +
+  labs(title = "Curva de Densidad de productos nuevos 2016", x = "productos nuevos", y = "Densidad")
+```
+```{r}
+ggplot(data = con23, aes(x = Prodmej_16)) +
+  geom_density(fill = "orange", color = "black") +
+  labs(title = "Curva de Densidad de productos mejorados 2016", x = "productos mejorados", y = "Densidad")
+```
+```{r}
+ggplot(data = con23, aes(x = Prodsincam_16)) +
+  geom_density(fill = "orange", color = "black") +
+  labs(title = "Curva de Densidad de productos sin cambios 2016", x = "productos sin cambios", y = "Densidad")
+```
+
+El comportamiento de los datos de este año se parece al del **2015**, pero ahora se ve que la concentración es aun mayor, lo que nos dice que la **variabilidad** de los datos aumentó.
+
+
+#  <span style="color:blue">Análisis exploratorio de datos espaciales
+
+
+El **Análisis Exploratorio de Datos Espaciales** es una disciplina que combina herramientas estadísticas y técnicas de visualización para explorar y comprender datos con una dimensión espacial y revelar patrones y relaciones especiales que pueden no ser evidentes en un análisis de datos convencional.  
+Ademas, este analisis nos conviene más porque nuestros datos están **georeferenciados**, asi que podremos sacar más información de este tipo de análisis.
+
+Para empezar con nuestros datos tendremos que instalar las librerias correspondientes
+```{r eval=FALSE, include=TRUE}
+install.packages(c("sf","tmap", "RColorBrewer", "cartogram" ))
+```
+
+Y llamamos a las librerias recien instaladas
+```{r message=FALSE, warning=FALSE}
+library(sf)
+library(tmap)
+library(RColorBrewer)
+library(cartogram)
+```
+
+A continuación se presenta una breve descripción de estas librerias:  
+
+* sf (Simple Features): Esta biblioteca es fundamental para el manejo y análisis de datos geoespaciales en R. Proporciona una estructura de datos simple y eficiente para representar datos espaciales, como puntos, líneas y polígonos, y permite realizar una amplia gama de operaciones espaciales, como unión, intersección y manipulación de datos geoespaciales.   
+
+* tmap: tmap es una biblioteca utilizada para la creación de mapas temáticos y visualización de datos geográficos en R. Puedes usar tmap para agregar capas de datos, etiquetas, escalas de color y otros elementos de diseño a tus mapas. Es especialmente útil para representar datos espaciales en una variedad de estilos y formatos.  
+
+* RColorBrewer: Esta biblioteca proporciona paletas de colores predefinidas para mapas y gráficos en R. Las paletas de colores son útiles para asignar colores a categorías o valores específicos en tus visualizaciones. 
+
+* cartogram: cartogram es una biblioteca que permite crear cartogramas, que son representaciones gráficas de datos geográficos en las que el tamaño de las áreas se distorsiona proporcionalmente en función de una variable específica.
+
+
+##  <span style="color:green"> Promedio de tiempo en el que espera recuperar la inversión de la innovación más importante introducida al mercado a partir de la comercialización de productos (bienes o servicios) o la puesta en marcha de procesos, por entidad federativa (2014-2015 y 2016)  
+
+Al ser un analisis de datos espaciales lidiaremos con archivos **shp**, para lo cual definiremos primero con el argumento `setwd` la carpeta donde estarán nuestras capas y asi poder llamar la capa que queramos analizar.
+```{r message=FALSE, warning=FALSE}
+setwd(("D:/Metodologia/ESDA"))
+mapa_20 <- st_read("esidet20.shp")
+```
+Desplegamos el mapa
+```{r warning=FALSE}
+plot(mapa_20)
+```
+
+```{r message=FALSE, warning=FALSE}
+st_crs(mapa_20)
+```
+La función `st_crs()` se utiliza en el paquete **sf** de R para obtener información sobre el sistema de coordenadas de un objeto espacial.
+
+Una vez aclarado esto, iniciamos el analisis de datos espaciales.
+
+
+```{r}
+tmap::tm_shape(shp=mapa_20)+
+  tmap::tm_borders()+
+  tmap::tm_fill("recu_inv_1")
+```
+* `tmap::tm_shape(shp = mapa_20)`: Esta línea crea un objeto de forma para representar los datos geoespaciales contenidos en el objeto mapa_20.
+
+* `tmap::tm_borders()`: Agrega los límites geográficos a tu mapa. Esto significa que se trazarán las líneas que definen los límites de las áreas geográficas representadas en el objeto mapa_20.
+
+* `tmap::tm_fill("recu_inv_1")`: Define el relleno del mapa y colorea las áreas geográficas según los valores de la variable "recu_inv_1".  
+
+En este mapa podemos ver más a detalle el valor de **recuperación de inversion promedio de innovaciones introducidad al mercado**, donde como habiamos dicho antes, **Colima** era el estado co el valor atipico, en este caso el valor con mayor promedio en el año 2016-2015.
+
+Para el año **2016** usaremos el mismo tipo de grafico.
+```{r message=FALSE, warning=FALSE}
+setwd(("D:/Metodologia/ESDA"))
+mapa_20 <- st_read("esidet20.shp")
+```
+
+```{r}
+tmap::tm_shape(shp=mapa_20)+
+  tmap::tm_borders()+
+  tmap::tm_fill("recu_inv_2")
+```
+
+En este caso vemos que **Sonora**, **Colima**, **Oaxaca** y **Coahuila** presentan los promedios más altos.
+
+##  <span style="color:green"> Porcentaje estimado de reducción en tiempo y costo de la innovación más importante introducida al mercado, por entidad federativa (2014-2015 y 2016)   
+
+Para este caso usaremos diagramas, para ver de una manera más visual como cambian las formas de los estados en relación de la magnitud analizada.
+
+```{r message=FALSE, warning=FALSE}
+setwd(("D:/Metodologia/ESDA"))
+mapa_21 <- st_read("esidet21.shp")
+```
+Desplegamos el mapa
+```{r warning=FALSE}
+plot(mapa_21)
+```
+
+```{r message=FALSE, warning=FALSE}
+st_crs(mapa_21)
+```
+
+```{r}
+cartograma.cont <- cartogram_cont(mapa_21,"redutiem_1")
+
+tmap::tm_shape(cartograma.cont) +
+  tmap::tm_fill("redutiem_1") +
+  tmap:: tm_borders()
+```
+
+```{r}
+cartograma.cont <- cartogram_cont(mapa_21,"reducost_1")
+
+tmap::tm_shape(cartograma.cont) +
+  tmap::tm_fill("reducost_1") +
+  tmap:: tm_borders()
+```
+
+Podemos observar en ambos graficos que la relación lineal positiva entre la reducción de tiempo y costo se ve en mayor proporcion en los estados de **Colima**, **Nayarit**, **Oaxaca**, **Sonora** y **Zacatecas**.
+
+##  <span style="color:green"> Distribución porcentual de los ingresos totales por ventas de las empresas del sector productivo, por entidad federativa, según clasificación de los productos (bienes o servicios) (2014-2015)  
+
+
+```{r message=FALSE, warning=FALSE}
+setwd(("D:/Metodologia/ESDA"))
+mapa_22 <- st_read("esidet22.shp")
+```
+Desplegamos el mapa
+```{r warning=FALSE}
+plot(mapa_22)
+```
+
+```{r message=FALSE, warning=FALSE}
+st_crs(mapa_22)
+```
+
+Para esta consulta usaremos un poco de transparencia en los colores para ver mejor los bordes el mapa.
+```{r}
+tmap::tm_shape(mapa_22)+
+  tmap::tm_borders()+
+  tmap::tm_fill("Prodnuev_1", alpha=0.7)+
+  tmap::tm_basemap(providers$OpenStreetMap,alpha = 0.5)
+```
+
+```{r}
+tmap::tm_shape(mapa_22)+
+  tmap::tm_borders()+
+  tmap::tm_fill("Prodmej_15", alpha=0.7)+
+  tmap::tm_basemap(providers$OpenStreetMap,alpha = 0.5)
+```
+
+```{r}
+tmap::tm_shape(mapa_22)+
+  tmap::tm_borders()+
+  tmap::tm_fill("Prodsincam", alpha=0.7)+
+  tmap::tm_basemap(providers$OpenStreetMap,alpha = 0.5)
+```
+Despues de desplegar estos mapas podemos observar que:  
+* En primer lugar, los estados con mayores ingresos por ventas de productos nuevos son Baja California, Durango, Guerrero y Quintana Roo.  
+* En segundo lugar, los estados con mayores ingresos por ventas de productos con mejoras son Chihuahua, Baja California Sur, Michoacan de Ocampo, Hidalgo, Puebla y Oaxaca.  
+* En ultimo lugar, los estados con mayores ingresos por productos sin mejoras son Coahuila de Zaragoza, Tamaulipas, Zacatecas, Nayarit, Jalisco, Tlaxcala y Veracruz.  
+
+##  <span style="color:green"> Distribución porcentual de los ingresos totales por ventas de las empresas del sector productivo, por entidad federativa, según clasificación de los productos (bienes o servicios)(2016)  
+
+Usaremos el mismo tipo de mapas, ya que como se indicó, lo unico que cambia es el año
+
+```{r message=FALSE, warning=FALSE}
+setwd(("D:/Metodologia/ESDA"))
+mapa_23 <- st_read("esidet23.shp")
+```
+Desplegamos el mapa
+```{r warning=FALSE}
+plot(mapa_23)
+```
+
+```{r message=FALSE, warning=FALSE}
+st_crs(mapa_23)
+```
+
+Para esta consulta usaremos un poco de transparencia en los colores para ver mejor los bordes el mapa.
+```{r}
+tmap::tm_shape(mapa_23)+
+  tmap::tm_borders()+
+  tmap::tm_fill("Prodnuev_1", alpha=0.7)+
+  tmap::tm_basemap(providers$OpenStreetMap,alpha = 0.5)
+```
+
+```{r}
+tmap::tm_shape(mapa_23)+
+  tmap::tm_borders()+
+  tmap::tm_fill("Prodmej_16", alpha=0.7)+
+  tmap::tm_basemap(providers$OpenStreetMap,alpha = 0.5)
+```
+
+```{r}
+tmap::tm_shape(mapa_23)+
+  tmap::tm_borders()+
+  tmap::tm_fill("Prodsincam", alpha=0.7)+
+  tmap::tm_basemap(providers$OpenStreetMap,alpha = 0.5)
+```
+
+Despues de desplegar estos mapas podemos observar que:  
+* En primer lugar, los estados con mayores ingresos por ventas de productos nuevos son Baja California, Sonora, Sinaloa, Aguascalientes, Ciudad de México y Tabasco en un intervalo de 29.6 a 86.  
+* En segundo lugar, los estados con mayores ingresos por ventas de productos con mejoras son Chihuahua, Michoacan de Ocampo, Hidalgo, Puebla, Oaxaca y Ciudad de México en un intervalo de 55.1 a 87.1  
+* En ultimo lugar, los estados con mayores ingresos por productos sin mejoras son Coahuila de Zaragoza, Tamaulipas, Zacatecas, Campeche, Jalisco, Tlaxcala, Veracruz, Colima, Morelos, México y Nuevo Leon en un intervalo de 55.1 a 87.1  
+
