@@ -1,0 +1,538 @@
+---
+title: "Apuntes de dpylr.Rmd"
+author: "Cristian Emanuel Cruz Sánchez"
+date: "2023-10-02"
+output: 
+  html_document:
+    theme: lumen
+  
+---
+
+# <span style="color:blue"> Modificación de filas con DPLYR
+
+
+En el siguiente trabajo analizaremos el funcionamiento de la libreria *tidyverse*, que en conjunto con otras bibliotecas veremos el analisis de datos.
+El conjunto de paqueterias de DPYLR ofrece las siguientes funciones para el analisis de datos:
+
+Filtrado de Datos: Utiliza la función `filter()` para seleccionar filas que cumplan con ciertas condiciones lógicas, lo que te ayuda a extraer subconjuntos de datos relevantes.  
+
+Transformación de Datos: Con `mutate()`, puedes crear nuevas columnas en función de cálculos o transformaciones de columnas existentes. También puedes utilizar transmute() para crear un nuevo conjunto de datos con columnas específicas.  
+
+**Agrupación de Datos**: `group_by()` te permite agrupar datos en función de una o más columnas, lo que facilita realizar cálculos agregados por grupos.  
+
+**Resumen de Datos**: Utiliza `summarize()`para calcular estadísticas resumidas dentro de grupos previamente definidos, como la media, la mediana o el conteo.  
+
+**Ordenación de Datos**: Con `arrange()`, puedes ordenar tus datos en función de una o más columnas para una mejor visualización y análisis.  
+
+**Selección de Columnas**: La función `select()` te permite elegir las columnas específicas que deseas utilizar, lo que ayuda a simplificar tus datos.  
+
+A lo largo de este archivo veremos en mayor produndidad cada funcionalidad.
+
+
+Primero tendremos que instalar las bibliotecas *tidyverse* y *nycflights13*. 
+```{r eval=FALSE, include=TRUE}
+install.packages("tidyverse")
+install.packages("nycflights13")
+```
+
+
+Una vez instaladas tendremos que llamarlas de la siguiente manera:
+
+```{r message=FALSE, warning=FALSE}
+library(nycflights13)
+library(tidyverse)
+```
+
+Una vez llamadas estas dos paqueterias llamamos al conjunto de datos de la libreria *nycflights* con la variable `flights`.
+
+```{r}
+flights
+```
+
+Aqui breve descripcion de cada variable de este conjunto de datos: 
+
+* **year**: El año del vuelo.  
+* **month**: El mes del vuelo.  
+* **day**: El día del vuelo.  
+* **dep_time**: La hora de salida del vuelo.  
+* **dep_delay**: El retraso de salida del vuelo en minutos.  
+* **arr_time**: La hora de llegada del vuelo.  
+* **arr_delay**: El retraso de llegada del vuelo en minutos.  
+* **carrier**: La aerolínea que opera el vuelo.  
+* **flight**: El número de vuelo.  
+* **origin**: El aeropuerto de salida.  
+* **dest**: El aeropuerto de llegada.  
+* **air_time**: La duración del vuelo en minutos.  
+* **distance**: La distancia recorrida en el vuelo en millas.  
+* **hour**: La hora del vuelo.  
+* **minute**: Los minutos del vuelo.  
+* **wind_dir**: La dirección del viento en grados.  
+* **wind_speed**: La velocidad del viento en nudos.  
+* **visibility**: La visibilidad en millas.  
+
+Una vez llamadas esta variable, usaremos las funciones `str()`y `glimpse()`para empezar nuestro analisis de datos, pero primero explicaremos para qué sirve cada funcion.
+
+La función `str()` devuelve una descripción completa de la estructura del conjunto de datos, incluyendo el tipo de datos de cada columna y el número de elementos en cada columna.
+
+La función `glimpse()` devuelve una descripción resumida de la estructura del conjunto de datos, incluyendo el tipo de datos de cada columna, el número de elementos en cada columna y los primeros y últimos elementos de cada columna.
+
+```{r}
+str(flights)
+glimpse(flights)
+```
+
+Una vez que hemos examinado la estructura de nuestro conjunto de datos, podemos comenzar a trabajar con él. Sin embargo, antes de avanzar, es importante comprender un elemento clave que será fundamental para nuestro análisis:
+
+Un pipe es una herramienta que nos permite conectar varias funciones de R en una secuencia continua de operaciones. Se representa mediante el símbolo `|>`.
+
+El siguiente código nos permite analizar los retrasos de los vuelos con destino a Houston a lo largo del tiempo, organizándolos en grupos según el año, el mes y el día. Aquí se desglosa su funcionamiento:  
+
+La primera función en el pipe es `filter()`. Esta función se encarga de filtrar el conjunto de datos, permitiéndonos seleccionar las observaciones relevantes.  
+
+La segunda función en el pipe es `group_by()`. Esta función agrupa el conjunto de datos según los valores que especificamos, lo que nos facilita el análisis por grupos específicos.  
+
+La tercera función en el pipe es `summarize()`. Su tarea es calcular el retraso promedio en la hora de llegada para cada grupo, excluyendo los valores faltantes *(NA)*.  
+
+De esta manera, el código siguiente nos permite llevar a cabo un análisis de los retrasos en los vuelos con destino a Houston a lo largo del tiempo, organizándolos por año, mes y día.
+```{r}
+ flights |>
+  filter(dest == "IAH") |> 
+  group_by(year, month, day) |> 
+  summarize(arr_delay = mean(arr_delay, na.rm = TRUE))
+```
+
+En el siguiente caso, la condición es `dep_delay > 120`. Esto significa que el código devolverá solo los vuelos que tuvieron un retraso de salida de más de dos horas, ya que d*dep_delay* expresa el retraso de cada vuelo en minutos.
+
+```{r}
+flights |> 
+  filter(dep_delay > 120)
+```
+
+En este caso, la condición es `month == 1 & day == 1`. Esto significa que el código devolverá solo los vuelos que tuvieron lugar el 1 de enero.Pues el operador `&` se utiliza para realizar una operación lógica *AND*. Esto significa que el resultado de la operación será *TRUE* solo si ambos operandos son *TRUE*.
+En el contexto del código, el operador `&` se utiliza para filtrar los vuelos que tuvieron lugar en enero o febrero. Esto se debe a que la condición `month == 1 & month == 2` solo se cumplirá si el mes del vuelo es 1 o 2.
+
+```{r}
+flights |> 
+  filter(month == 1 & day == 1)
+
+```
+
+En este caso, la condición es `month == 1 | month == 2`. Esto significa que el código devolverá solo los vuelos que tuvieron lugar en enero o febrero. El operador `|` se utiliza para realizar una operación lógica *OR*. Esto significa que el resultado de la operación será *TRUE* si uno o ambos operandos son *TRUE*.
+En el contexto del código, el operador `|` se utiliza para filtrar los vuelos que tuvieron lugar en enero, febrero o ambos meses. Esto se debe a que la condición `month == 1 | month == 2` se cumplirá si el mes del vuelo es 1 o 2.
+```{r}
+flights |> 
+  filter(month == 1 | month == 2)
+
+```
+
+En este caso, la condición es `month %in% c(1, 2)`. Esto significa que el código devolverá solo los vuelos que tuvieron lugar en enero o febrero. El operador `%in%` se utiliza para comprobar si un valor está contenido en un vector.El vector `c(1, 2)`contiene los números 1 y 2. Por lo tanto, el código `month %in% c(1, 2) ` devolverá *TRUE* si el mes del vuelo es 1 o 2.
+```{r}
+flights |> 
+  filter(month %in% c(1, 2))
+```
+
+Crearemos un nuevo objeto con  `jan1 <- flights |> filter(month == 1 & day == 1)`  llamado *jan1* que contiene los vuelos que tuvieron lugar el 1 de enero y con la condición `month == 1 & day == 1` significa que solo se incluirán los vuelos que tengan el mes y el día iguales a 1. Ya que el operador `==` funciona como una condicional, que se cumplira si la variable que le indiquemos sea estrictamente igual al valor indicado despues del operador.
+```{r}
+jan1 <- flights |> 
+  filter(month == 1 & day == 1)
+```
+
+El siguiente código ordena el conjunto de datos flights por año, mes, día y hora de salida. En este caso, la función `arrange()` se utiliza para ordenar el conjunto de datos *flights* por las columnas *year, month, day y dep_time*, pues la función `arrange()` toma un vector de columnas como argumento y devuelve un nuevo conjunto de datos ordenado por las columnas especificadas.
+```{r}
+flights |> 
+  arrange(year, month, day, dep_time)
+
+```
+
+
+
+El siguiente código ordena el conjunto de datos *flights* en orden descendente por retraso de salida.Pues `desc`significa descendente, por lo que agregarlo antes de la variable por la que queremos ordenar un nuevo marco o conjunto de datos.
+```{r}
+flights |> 
+  arrange(desc(dep_delay))
+```
+
+El siguiente codigo devuelve un nuevo conjunto de datos que contiene solo los registros únicos del conjunto de datos *flights*.Donde `distinc` toma un vector de columnas como argumento y devuelve un nuevo conjunto de datos que contiene solo los registros únicos del conjunto de datos original, según los valores de las columnas especificadas.
+
+```{r}
+flights |> 
+  distinct()
+```
+
+En este caso, el codigo devuelve un nuevo conjunto de datos que contiene solo los pares únicos de origen y destino del conjunto de datos *flights*. En este caso `distinc` nos devolvera los datos unicos que hay en los campos `origin` y `dest`, o sea, los destinos y origenes unicos.
+```{r}
+flights |> 
+  distinct(origin, dest)
+```
+
+El siguiente codigo devuelve un nuevo conjunto de datos que contiene solo los pares únicos de origen y destino del conjunto de datos *flights*, pero conservando todas las filas del conjunto de datos original.Pues la opción `keep_all = TRUE` indica a la función `distinct()` que conserve todas las filas del conjunto de datos original, incluso si tienen valores duplicados en las columnas *origin y dest*.
+
+```{r}
+flights |> 
+  distinct(origin, dest, .keep_all = TRUE)
+```
+
+
+El siguiente codigo devuelve un nuevo conjunto de datos que cuenta el número de vuelos entre cada origen y destino en el conjunto de datos *flights*, ordenado por el número de vuelos en orden *descendente*. Pues la función `count()` toma un vector de columnas como argumento y devuelve un nuevo conjunto de datos que cuenta el número de valores únicos en cada columna y el argumento `sort` especifica si se debe ordenar el nuevo conjunto de datos por el número de vuelos en orden descendente.
+
+```{r}
+flights |>
+  count(origin, dest, sort = TRUE)
+```
+
+### <span style="color:red"> Ejercicios
+A continuación se mostrara un conjunto de ejercicios para reforzar lo aprendido:
+
+Tuvieron un retraso en la llegada de dos o más horas.
+```{r}
+flights %>%
+  filter(arr_delay >= 120)
+```
+
+Cuyo destino es Houston (aeropuertos IAH o HOU)
+```{r}
+flights %>%
+  filter(dest %in% c("IAH", "HOU"))
+```
+
+Fueron operados por United, American o Delta.
+```{r}
+flights %>%
+  filter(carrier %in% c("UA", "AA", "DL"))
+```
+
+Salidas en verano `(julio, agosto y septiembre)`
+```{r}
+flights %>%
+  filter(month %in% c(7, 8, 9))
+```
+
+Llegaron con más de dos horas de retraso, pero no salieron tarde
+```{r}
+flights %>%
+  filter(dep_delay <= 0)
+
+```
+
+Se retrasaron al menos una hora, pero recuperaron más de 30 minutos de vuelo
+```{r}
+flights %>%
+  filter(arr_delay >= 60, arr_delay < (dep_delay + 180))
+```
+
+# <span style="color:blue"> Modificacion de columnas mediante `mutate()`y `select()`
+
+En el siguiente apartado veremos el funcionamiento de las funciones `mutate()` y `select()`.
+
+## <span style="color:violet"> Funcion `mutate()`
+`mutate()` toma un vector de expresiones como argumento y devuelve un nuevo conjunto de datos con las columnas especificadas agregadas.  
+
+El siguiente codigo crea dos nuevas columnas en el conjunto de datos *flights*, donde:
+`gain`: La diferencia entre el retraso en la salida y el retraso en la llegada.  
+`speed`: La velocidad del vuelo en millas por hora, calculada dividiendo la distancia por el tiempo de vuelo en minutos y multiplicando por 60.  
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60)
+```
+
+El siguiente codigo crea dos nuevas columnas en el conjunto de datos *flights*:
+
+`gain`: La diferencia entre el retraso en la salida y el retraso en la llegada.
+`speed`: La velocidad del vuelo en millas por hora, calculada dividiendo la distancia por el tiempo de vuelo en minutos y multiplicando por 60. El argumento `.before = 1` especifica que las nuevas columnas se deben agregar antes de las columnas antes que todas las demas columnas en el marco de datos, apareciendo al principio.
+
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60,
+    .before = 1
+  )
+```
+
+El siguiente codigo especifica que las columnas anteriormente creadas ahora se recorran hasta el final.Pues el argumento `.after` especifica que las columnas indicadas de un conjunto de datos puedan aparecer hasta el final de este.
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    speed = distance / air_time * 60,
+    .after = day
+  )
+```
+
+En el siguiente codigo agregamos tres nuevas columnas en el conjunto de datos *flights*:
+`gain`: La diferencia entre el retraso en la salida y el retraso en la llegada.  
+`hours`: El tiempo de vuelo en horas, calculado dividiendo el tiempo de vuelo en minutos por 60.  
+`gain_per_hour`: La ganancia por hora de vuelo, calculada dividiendo la ganancia por el número de horas de vuelo.
+En este caso el argumento `.keep = "used"` especifica que solo se deben conservar las columnas que se utilizan en las expresiones especificadas.
+```{r}
+flights |> 
+  mutate(
+    gain = dep_delay - arr_delay,
+    hours = air_time / 60,
+    gain_per_hour = gain / hours,
+    .keep = "used"
+  )
+```
+
+## <span style="color:violet">Función `select()`  
+
+La función `select()` se utiliza para seleccionar columnas de un conjunto de datos. La función toma una lista de nombres de columnas como argumento y devuelve un nuevo conjunto de datos con las columnas especificadas.
+
+En el siguiente codigo se seleccionan las columnas year, month y day del conjunto de datos *flights*, por lo que solo nos dara un marco de datos con estas tres columnas.
+```{r}
+flights |> 
+  select(year, month, day)
+```
+
+En este codigo se seleccionan las columnas que esten en el rango `year::day`, por lo que las columnas entre las conlumnas especificadas formaran un nuevo marco de datos.
+```{r}
+flights |> 
+  select(year:day)
+```
+
+En este codigo solo se selecciona todas las columnas del conjunto de datos flights excepto year, month y day. Ya que el operador `!` indica lo que queremos excluir.En este caso, la lista de nombres de columnas está precedida por el signo de exclamación `(!)`. Esto indica a la función `select()` que debe seleccionar todas las columnas excepto las que se especifican.
+```{r}
+flights |> 
+  select(!year:day)
+```
+
+En este codigo se selecciona todas las columnas del conjunto de datos *flights* que son de tipo carácter. La expresión lógica que se utiliza en este caso es `is.character()`. Esta función devuelve *TRUE* si el valor de su argumento es de tipo carácter y *FALSE* en caso contrario.Esto nos quita las columnas con datos numericos del marco de datos.
+```{r}
+flights |> 
+  select(where(is.character))
+```
+
+En este codigo se selecciona la columna `tailnum` del conjunto de datos *flights* y la renombra como `tail_num`. 
+```{r}
+flights |> 
+  select(tail_num = tailnum)
+```
+
+En este codigo usamos `rename` para renombrar la columna `tailnum` del conjunto de datos *flights* como `tail_num`. La diferencia es que aqui no seleccionamos la columna, solo la renombramos, por lo que esto modificara nuestro conjunto de datos original.
+```{r}
+flights |> 
+  rename(tail_num = tailnum)
+```
+
+En el siguiente codigo se reubica las columnas `time_hour` y `air_time` del conjunto de datos *flights* al principio del conjunto de datos.En este caso, la lista de nombres de columna contiene dos elementos: `time_hour` y `air_time`. Esto indica a la función `relocate()` que debe reubicar las columnas `time_hour` y `air_time` al principio del conjunto de datos *flights*.
+
+```{r}
+flights |> 
+  relocate(time_hour, air_time)
+```
+
+### <span style="color:red">Ejercicios
+A continuación haremos una serie de ejercicios y preguntas para reforzar lo aprendido:  
+¿De cuántas formas es posible seleccionar *dep_time*, *dep_delay*, *arr_time* y *arr_delay* de la base de datos?  
+Hay cuatro formas posibles:  
+Lista de nombres de columna: flights %>% select(dep_time, dep_delay, arr_time, arr_delay)  
+Vector de nombres de columna: flights %>% select(c("dep_time", "dep_delay", "arr_time", "arr_delay"))  
+Expresiones regulares: flights %>% select(matches("delay"))  
+Función any_of(): flights %>% select(any_of(c("dep_time", "dep_delay", "arr_time", "arr_delay")))  
+
+¿Qué sucede si especificas el nombre de la misma variable varias veces en una llamada a *select()*?
+La función devolverá una columna con los valores de la variable duplicada. Por ejemplo, el siguiente código devolverá un conjunto de datos con dos columnas llamadas dep_time:
+```{r}
+flights %>% select(dep_time, dep_time)
+```
+
+¿Qué hace la función `any_of()`? ¿Por qué podría ser útil en conjunción con este vector?  
+
+La función `any_of()` devuelve un vector lógico que indica si alguno de los elementos del vector de entrada coincide con el patrón especificado. En el caso del vector variables, `any_of()` devolvería un vector lógico que indica si alguna de las variables coincide con el patrón "*delay*".
+
+Esta función podría ser útil en conjunción con `select()` para seleccionar todas las columnas que contienen el patrón especificado. Por ejemplo, el siguiente código devolvería un conjunto de datos con todas las columnas que contienen el patrón "*delay*":
+```{r}
+flights %>% select(any_of(c("dep_delay", "arr_delay")))
+```
+
+¿Qué hace el siguiente segmento de código?  
+`flights |> select(contains("TIME"))`
+```{r}
+flights |> select(contains("TIME"))
+```
+
+Como vemos hay un auxiliar de selección, como `contains()`, este trata las mayúsculas y minúsculas de forma predeterminada. Esto significa que el código anterior seleccionará las columnas con *time¨en su nombre, aunque esten en minusculas.  
+
+Renombra air_time como air_time_min para indicar las unidades de medida, muévelo al principio.  
+```{r}
+flights %>%
+  rename(air_time_min = air_time) %>%
+  relocate(air_time_min, .before = "year")
+```
+Usé la función `rename()` para renombrar la columna air_time como air_time_min. Luego, usa la función `relocate()` para mover la columna `air_time_min` al principio del conjunto de datos.  
+
+¿Por qué el siguiente código no funciona?  
+`flights |> select(tailnum) |> arrange(arr_delay)`
+No funciona porque la función arrange() requiere al menos una columna para ordenar. En este caso, el código solo especifica la columna tailnum para seleccionar.  
+
+Los vuelos más rápidos al aeropuerto de Houston (IAH)
+```{r}
+flights |> 
+  filter(dest == "IAH") |> 
+  mutate(speed = distance / air_time * 60) |> 
+  select(year:day, dep_time, carrier, flight, speed) |> 
+  arrange(desc(speed))
+```
+
+El codigo anterior filtra el conjunto de datos flights para solo incluir los vuelos que llegan a IAH (Houston), calcula la velocidad de cada vuelo en millas por hora, selecciona las columnas especificadas y ordena el conjunto de datos por velocidad en orden descendente.  
+
+Los vuelos que más tiempo recuperaron saliendo de JFK
+```{r}
+flights |> 
+  filter(origin=="JFK") |> 
+  mutate(gain=dep_delay- arr_delay) |> 
+  select(year:day,carrier,flight,dest,gain) |> 
+  arrange(desc(gain))
+```
+El siguiente código filtra el conjunto de datos *flights* para solo incluir los vuelos que salen de JFK (Nueva York), calcula la ganancia de cada vuelo (retraso de salida - retraso de llegada), selecciona las columnas especificadas y ordena el conjunto de datos por ganancia en orden descendente.
+
+# <span style="color:blue">Agrupación de bases de datos mediante `group_by()`  
+
+La funcion `group_by`se usa para agrupar un conjunto de datos según uno o más valores de una o más columnas. Esto permite realizar operaciones estadísticas y analíticas en los datos agrupados.  
+Por ejemplo, en el siguiente codigo agruparemos el conjunto de datos *flights* según el mes del año. Esto devuelve un conjunto de datos con una nueva columna llamada group que contiene el mes del año para cada fila.
+```{r}
+flights |> 
+  group_by(month)
+```
+
+## <span style="color:violet">Funcion `summarize()`  
+La funcion `summarize()`se usa para realizar operaciones estadísticas y analíticas en un conjunto de datos agrupado.  
+
+Por ejemplo, en el siguiente codigo se agrupa el conjunto de datos *flights* según el mes del año y calcula la demora promedio de salida por mes.
+
+El resultado de este código es un conjunto de datos que tiene una fila por cada mes del año, con una columna llamada `avg_delay` que contiene la demora promedio de salida para ese mes.
+```{r}
+flights |> 
+  group_by(month) |> 
+  summarize(
+    avg_delay = mean(dep_delay, na.rm = TRUE)
+  ) |> 
+  arrange(desc(avg_delay))
+```
+
+En el siguiente caso se agrupa el conjunto de datos *flights* según el mes del año, calcula la demora promedio de salida por mes, y ordena los resultados en orden decreciente de demora de salida.  
+El argumento `na.rm = TRUE` de la función `mean()` indica que omita los valores *NA* al calcular la media. Esto es importante porque el conjunto de datos *flights* puede contener valores *NA* en la columna `dep_delay`.
+```{r}
+flights |> 
+  group_by(month) |> 
+  summarize(
+    avg_delay = mean(dep_delay, na.rm = TRUE)
+  ) |> 
+  arrange(desc(avg_delay))
+```
+
+## <span style="color:violet">Operaciones dentro de `summarize()`
+
+Dentro de la función `summarize()`, se pueden realizar una variedad de operaciones para calcular estadísticas y métricas sobre los datos agrupados.  
+
+Las siguientes son algunas de las operaciones más comunes que se pueden realizar dentro de `summarize()`:  
+
+Funciones estadísticas: se pueden usar funciones estadísticas como `mean()`, `median()`, `min()`, `max()`, `sd()`, `var()`, etc. para calcular estadísticas básicas sobre los datos.  
+Funciones de recuento: se pueden usar funciones de recuento como `n()`, `sum()`, `prod()`, etc. para calcular recuentos, sumas y productos de los datos.  
+Funciones de transformación: se pueden usar funciones de transformación como `log()`, `sqrt()`, `exp()`, etc. para transformar los datos.  
+Por ejemplo, en el siguiente codigo agrupa el conjunto de datos *flights* según el mes del año, calcula la demora promedio de salida por mes y el número de vuelos por mes.  
+
+El argumento `na.rm = TRUE` de la función `mean()` indica que se omitan los valores *NA* al calcular la media.   
+
+La función `n()` se usa para calcular el número de filas en cada grupo.
+```{r}
+
+flights |> 
+  group_by(month) |> 
+  summarize(
+    delay = mean(dep_delay, na.rm = TRUE), 
+    vuelos = n()
+  )
+```
+
+# <span style="color:blue">Division de bases de datos con la función `slice()`  
+
+La función `slice()` del paquete dplyr se usa para extraer una subsección de un conjunto de datos.
+
+Esta función `slice()` cuenta con dos argumentos principales:
+
+*start*: El índice de la fila inicial a incluir en la subsección.
+*end*: El índice de la fila final a incluir en la subsección.
+
+Por ejemplo, en este codigo `df |> slice_head(n = 1)` se extrae la primera fila del marco de datos.  
+En este `df |> slice_tail(n = 1)` se extrae la última fila del marco de datos.  
+
+Del codigo `df |> slice_min(x, n = 1)` podemos decir que `slice_min()` extrae las filas con el valor más bajo en la columna especificada. El argumento `n` especifica el número de filas que se deben extraer. Por ejemplo, el siguiente código extraerá la fila con el valor más bajo en la columna x.  
+Para ver un ejemplo más conciso de esta funcion, usaremos el siguiente ejemplo:
+```{r}
+flights |> 
+  group_by(dest) |> 
+  slice_max(arr_delay, n = 1) |>
+  relocate(dest,arr_delay) |> 
+  arrange(desc(arr_delay))
+```
+Despued de ejecutarlo podemos observas que dicha funcion grupa el conjunto de datos *flights* según el destino `(columna dest)`.  
+Extrae la fila con el mayor retraso de llegada `(columna arr_delay)` para cada grupo.
+Reubica las columnas `dest` y `arr_delay` para que aparezcan en primer y segundo lugar, respectivamente.  
+Ordena el conjunto de datos en orden decreciente de retraso de llegada.  
+El resultado de este código es un conjunto de datos que muestra los destinos con los mayores retrasos de llegada. 
+
+### <span style="color:red">Ejercicios
+Practicaremos lo aprendido con los siguientes ejercicios  
+
+1. ¿Qué aerolínea tiene los peores retrasos promedio?  
+```{r}
+airline_delays <- flights %>%
+  summarise(delay = mean(arr_delay,na.rm = TRUE))
+
+airline_delays %>%
+  arrange(desc(delay))
+
+```
+
+2. Encuentra los vuelos que tienen los mayores retrasos de salida a cada destino.
+```{r}
+flights %>%
+  group_by(dest) %>%
+  slice_max(dep_delay, n = 1)
+```
+
+3. ¿Cómo varían los retrasos a lo largo del día? Ilustra tu respuesta con un gráfico.  
+Primero instalamos la paqueteria *ggplot*
+```{r eval=FALSE, include=TRUE}
+install.packages("ggplot2")
+```
+Llamamos a la paqueteria
+```{r}
+library(ggplot2)
+```
+
+```{r echo=FALSE, warning=FALSE}
+
+data("flights")
+
+flights_hourly_delay <- flights %>%
+  mutate(hour = dep_time %/% 100) %>%
+  group_by(hour) %>%
+  summarise(mean_delay = mean(dep_delay, na.rm = TRUE))
+
+ggplot(flights_hourly_delay, aes(x = hour, y = mean_delay)) +
+  geom_bar(stat = "identity", fill = "green") +
+  labs(
+    title = "Retrasos Promedio por Hora del Día",
+    x = "Hora del Día",
+    y = "Retraso Promedio"
+  ) +
+  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  theme_minimal()
+```
+
+4. ¿Qué sucede si proporcionas una `n` con un valor negativo en slice_min() y sus variantes?  
+Si proporcionas un valor negativo para n, se producirá un error y R arrojará un mensaje de error que indica que n debe ser un número no negativo.  
+
+
+
+5. Explica qué hace `count()` en relación con los verbos de dplyr que acabas de aprender.¿Qué hace el argumento "sort" en `count()`?  
+La función `count()` en *dplyr* se utiliza para contar el número de observaciones únicas en un conjunto de datos y generar un resumen de esas frecuencias.  
+`count()` a menudo se utiliza junto con otras operaciones de transformación de datos para obtener información sobre la distribución de categorías en una o más columnas de un conjunto de datos.
+
+El argumento `sort` en `count()` es un argumento lógico *(TRUE o FALSE)* que controla si los resultados deben ordenarse en orden descendente por la columna de conteo. 
+
+De esta manera vimos de una manera practica y algo teorica como funcionan las ditintas funciones de tidyverse del conjunto de paqueterias de dpylr.
